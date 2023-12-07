@@ -5,6 +5,9 @@ import cv2
 import matplotlib.pyplot as plt
 
 class ImagePreprocessing():
+    def __init__(self, opt):
+        self.opt = opt["LANE_PREPROCESSING"]
+
     def get_sobel_image(self, sobel_image, threshold):
         abs_sobel_image = np.absolute(sobel_image)
         scaled_sobelx = np.uint8(255*abs_sobel_image/np.max(abs_sobel_image))
@@ -26,20 +29,21 @@ class ImagePreprocessing():
         sobelx = cv2.Sobel(l_channel, cv2.CV_64F, 1, 0, ksize = 3)
         sobely = cv2.Sobel(l_channel, cv2.CV_64F, 0, 1, ksize = 3)
 
-        sxbinary = self.get_sobel_image(sobelx, [25, 255])
-        sybinary = self.get_sobel_image(sobely, [110, 250])
+        sxbinary = self.get_sobel_image(sobelx, self.opt["sobel_x_thres"])
+        sybinary = self.get_sobel_image(sobely, self.opt["sobel_y_thres"])
 
         r_binary = np.zeros_like(red_channel)
-        r_binary[(red_channel >= 60) & (red_channel <= 255)] = 255
+        r_binary[(red_channel >= self.opt["red_thres"][0]) \
+                & (red_channel <= self.opt["red_thres"][1])] = 255
         combined_binary = np.zeros_like(sxbinary)
-        
+        # breakpoint()
         grayImg = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
         # _, image_ff = cv2.threshold(grayImg, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-        xy_bin = sxbinary + sybinary
         grayImg[grayImg >= 17] = 255
+
         adaptive = cv2.adaptiveThreshold(grayImg, 255,\
-                            cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 41, -50)
-        combined_binary[((adaptive == 255) & (sxbinary == 255))
+                            cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, self.opt["adaptive_block_size"], self.opt["adaptive_offset"])
+        combined_binary[((adaptive == 255) & (sxbinary == 255)) 
                         | ((sxbinary == 255) & (r_binary == 255))] = 255
         
         new_combined_binary = combined_binary
@@ -47,13 +51,13 @@ class ImagePreprocessing():
         new_combined_binary = self.region_of_interest(new_combined_binary)
         
         new_combined_binary = cv2.dilate(new_combined_binary, \
-                                np.ones((3, 3), np.uint8)) 
+                                np.ones((self.opt["dilate_kernel"], self.opt["dilate_kernel"]), np.uint8)) 
 
         new_combined_binary = cv2.erode(new_combined_binary, \
-                                np.ones((3,3), np.uint8)) 
+                                np.ones((self.opt["dilate_kernel"], self.opt["dilate_kernel"]), np.uint8)) 
         
 
-        return new_combined_binary
+        return new_combined_binary, grayImg
     
     
     def region_of_interest(self, frame):
@@ -61,12 +65,6 @@ class ImagePreprocessing():
         width = frame.shape[1]
         mask = np.zeros_like(frame)
 
-        # region_of_interest_vertices = np.array([[   (0, height),
-        #                                             (0, height - 50),
-        #                                             (0.25 * width, 0.4 * height),
-        #                                             (0.65 * width, 0.4 * height),
-        #                                             (width, height-50),
-        #                                             (width, height)]], np.int32)
         region_of_interest_vertices = np.array([[   (0, height),
                                                     (width, height),
                                                     (width, height - 60),
@@ -77,19 +75,19 @@ class ImagePreprocessing():
         cv2.fillPoly(mask, region_of_interest_vertices, 255)
         masked_image = cv2.bitwise_and(frame, mask)
         return masked_image
-      
-if __name__ == '__main__':
+    
+if __name__ == "__main__":
     im_dir = r'test_im'
-    save_dir = r'save_im'
-    im_pros = ImagePreprocessing()
+    save_dir = r'save_im'  
+    save_dir2 = r'save_im2'
+    import utils.utils_action as action
+    opt = action.load_config_file("main_rc.json")
+    im_pros = ImagePreprocessing(opt)
     for path in os.listdir(im_dir):
         image_path = os.path.join(im_dir, path)
         im = cv2.imread(image_path)    
-        result = im_pros.process_image(im)
-        # cv2.imshow("result", result)
+        result, grayIm = im_pros.process_image(im)
+        # cv2.imshow("gray_image", grayIm)
         # cv2.waitKey(0)
         cv2.imwrite(os.path.join(save_dir, path), result)
-        # plt.figure()
-        # plt.imshow(result)    
-        # save_path = os.path.join(save_dir, path)
-        # plt.imsave(save_path, result)
+        cv2.imwrite(os.path.join(save_dir2, path), grayIm)
