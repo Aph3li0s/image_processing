@@ -11,7 +11,7 @@
             255
         ],
         "sobel_y_thres": [
-            110,
+            110, 
             250
         ],
         "red_thres": [
@@ -35,5 +35,10 @@
         "min_length": 50,
         "middle_point_ratio": 0.5,
         "angle_scale_ratio": 0.3
-        }
+        },
+    "INTERCEPT_DETECTION": {
+            "crop_ratio": 0.6,
+            "minimum_points": 1,
+            "tolerance": 2
+    }
 }

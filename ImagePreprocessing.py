@@ -1,8 +1,6 @@
-import time
 import numpy as np
 import os 
 import cv2
-import matplotlib.pyplot as plt
 
 class ImagePreprocessing():
     def __init__(self, opt):
@@ -19,8 +17,8 @@ class ImagePreprocessing():
 
     def process_image(self, frame):
         frame = cv2.GaussianBlur(frame, (3, 3), 0)
-        bgr_image = np.copy(frame)
         
+        bgr_image = np.copy(frame)
         bgr_image = self.region_of_interest(bgr_image)
         red_channel = bgr_image[:,:,2]
         hls = np.float64(cv2.cvtColor(bgr_image, cv2.COLOR_BGR2HLS))
@@ -36,29 +34,23 @@ class ImagePreprocessing():
         r_binary[(red_channel >= self.opt["red_thres"][0]) \
                 & (red_channel <= self.opt["red_thres"][1])] = 255
         combined_binary = np.zeros_like(sxbinary)
-        # breakpoint()
-        grayImg = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
-        # _, image_ff = cv2.threshold(grayImg, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+        grayImg = self.region_of_interest(cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY))
         grayImg[grayImg >= 17] = 255
-
         adaptive = cv2.adaptiveThreshold(grayImg, 255,\
-                            cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, self.opt["adaptive_block_size"], self.opt["adaptive_offset"])
-        combined_binary[((adaptive == 255) & (sxbinary == 255)) 
-                        | ((sxbinary == 255) & (r_binary == 255))] = 255
+                cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, self.opt["adaptive_block_size"], self.opt["adaptive_offset"])
+        combined_binary[((adaptive == 255) & (sxbinary == 255)) | ((sxbinary == 255) & (r_binary == 255))] = 255
         
-        new_combined_binary = combined_binary
-        new_combined_binary[((combined_binary == 255) & (adaptive == 255))] = 255
-        new_combined_binary = self.region_of_interest(new_combined_binary)
+        filtered_lane = combined_binary
+        filtered_lane[((combined_binary == 255) & (adaptive == 255))] = 255
         
-        new_combined_binary = cv2.dilate(new_combined_binary, \
+        filtered_lane = cv2.dilate(filtered_lane, \
                                 np.ones((self.opt["dilate_kernel"], self.opt["dilate_kernel"]), np.uint8)) 
 
-        new_combined_binary = cv2.erode(new_combined_binary, \
+        filtered_lane = cv2.erode(filtered_lane, \
                                 np.ones((self.opt["dilate_kernel"], self.opt["dilate_kernel"]), np.uint8)) 
         
 
-        return new_combined_binary, grayImg
-    
+        return filtered_lane, sybinary
     
     def region_of_interest(self, frame):
         height = frame.shape[0]
@@ -75,19 +67,3 @@ class ImagePreprocessing():
         cv2.fillPoly(mask, region_of_interest_vertices, 255)
         masked_image = cv2.bitwise_and(frame, mask)
         return masked_image
-    
-if __name__ == "__main__":
-    im_dir = r'test_im'
-    save_dir = r'save_im'  
-    save_dir2 = r'save_im2'
-    import utils.utils_action as action
-    opt = action.load_config_file("main_rc.json")
-    im_pros = ImagePreprocessing(opt)
-    for path in os.listdir(im_dir):
-        image_path = os.path.join(im_dir, path)
-        im = cv2.imread(image_path)    
-        result, grayIm = im_pros.process_image(im)
-        # cv2.imshow("gray_image", grayIm)
-        # cv2.waitKey(0)
-        cv2.imwrite(os.path.join(save_dir, path), result)
-        cv2.imwrite(os.path.join(save_dir2, path), grayIm)
