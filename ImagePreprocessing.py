@@ -83,10 +83,10 @@ class ImagePreprocessing():
         width = frame.shape[1]
         mask = np.zeros_like(frame)
 
-        region_of_interest_vertices = np.array([[   (100, height),
-                                                    (width - 100, height),
-                                                    (width - 100, 120),
-                                                    (100, 120)]], np.int32)
+        region_of_interest_vertices = np.array([[   (50, height),
+                                                    (width - 50, height),
+                                                    (width - 50, 120),
+                                                    (50, 120)]], np.int32)
         cv2.fillPoly(mask, region_of_interest_vertices, 255)
         masked_image = cv2.bitwise_and(frame, mask)
         return masked_image

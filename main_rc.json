@@ -40,7 +40,7 @@
             "crop_ratio": 0.35,
             "minimum_points": 1,
             "tolerance": 2,
-            "gap_thresh": 120,
+            "gap_thresh": 130,
             "max_points_thresh": 240
     }
 }

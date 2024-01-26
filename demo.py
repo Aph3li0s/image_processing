@@ -36,14 +36,15 @@ def process_image(in_img, out_img, show):
         max_lines = check_intercept[1]['max_points']
         cv2.imwrite(os.path.join(out_img, path), im)
         
-        if check_intercept[0][1]<= check_thresh['gap_thresh']:
-            if check_intercept[0][0]>= check_thresh['max_points_thresh']:
+        if check_intercept[0][1]<= check_thresh['gap_thresh'] \
+            and check_intercept[0][0]>= check_thresh['max_points_thresh']:
                 # print(path)
                 for i in max_lines:
-                    cv2.circle(im, (i[0], i[1] + crop_height_value), 2, (0, 0, 255), -1)
+                    cv2.circle(im, (i[0], i[1] + crop_height_value), 1, (0, 0, 255), -1)
                 cv2.imwrite(os.path.join(out_img, path), im)
                 
         if show:
+            # show lane
             cv2.imshow('raw image', lane_det)
             cv2.imshow('intersection', im)
 
@@ -72,15 +73,10 @@ def process_video(in_vid, out_dir, show = True):
         check_intercept = intercept.detect(hlane_det)
         
         max_lines = check_intercept[1]['max_points']
-        if check_intercept[0][1]<= check_thresh['gap_thresh']:
-            if check_intercept[0][0]>= check_thresh['max_points_thresh']:
+        if check_intercept[0][1]<= check_thresh['gap_thresh'] \
+            and check_intercept[0][0]>= check_thresh['max_points_thresh']:
                 for i in max_lines:
-                    cv2.circle(frame, (i[0], i[1] + crop_height_value), 2, (0, 0, 255), -1)
-        #         cnt += 1
-        # if cnt == 5:
-        #     for path in os.listdir(out_dir):
-        #         cv2.imwrite(os.path.join(out_dir, path), frame)
-        #     cnt = 0
+                    cv2.circle(frame, (i[0], i[1] + crop_height_value), 1, (0, 0, 255), -1)
         if show:
             cv2.imshow('Raw Video', cv2.resize(frame, (512, 384)))
             cv2.imshow('Road Detection', cv2.resize(lane_det, (512, 384)))
