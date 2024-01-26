@@ -2,6 +2,8 @@ import numpy as np
 import cv2
 from collections import defaultdict
 
+from utils.utils_function import display_lines, get_point, display_points, connect_lines_y_axis, connect_lines_x_axis
+
 class InterceptDetection:
     def __init__(self, opt, debug=False):
         self.opt = opt["INTERCEPT_DETECTION"]
@@ -60,9 +62,6 @@ class InterceptDetection:
         return max_len, gap, max_points
 
     def detect(self, sybinary):
-        image_height = sybinary.shape[0]
-        sybinary = sybinary[int(image_height * self.opt["crop_ratio"]):, :]
-        
         max_len, gap, max_points = self.find_maximum_connected_line(sybinary)
         if self.debug:
             debug_data = {"image_size" : [int(sybinary.shape[0]), int(sybinary.shape[1])],
@@ -71,3 +70,28 @@ class InterceptDetection:
             return [max_len, gap], debug_data
 
         return [max_len, gap], None
+    
+if __name__ == "__main__":
+    test_im = r'test_real/image120.jpg'
+    import os
+    import ImagePreprocessing
+    import cv2
+    import utils.utils_action as action
+    import utils.utils_function as func
+    opt = action.load_config_file("main_rc.json")
+    im_pros = ImagePreprocessing.ImagePreprocessing(opt)
+    intercept = InterceptDetection(opt, debug=True)
+    im = cv2.imread(test_im)
+    im_cut = im[int(480 * 0.35):, :]
+    height = int(im.shape[0] * float(opt['INTERCEPT_DETECTION']['crop_ratio']))
+    result= im_pros.process_image2(im_cut)
+    check_intercept, debug = intercept.detect(result)
+    # print('detected' if check_intercept[0][0] > 300 else 'not detected')
+    a = debug['max_points']
+    for i in a:
+        cv2.circle(im, (i[0], i[1] + height), 2, (0, 0, 255), -1)
+    print(check_intercept)
+    # dis_lines = func.connect_lines_y_axis(a)
+    cv2.imshow('test', im)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
