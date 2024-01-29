@@ -2,9 +2,7 @@ import numpy as np
 import cv2
 from collections import defaultdict
 
-from utils.utils_function import display_lines, get_point, display_points, connect_lines_y_axis, connect_lines_x_axis
-
-class InterceptDetection:
+class IntersectionDetection:
     def __init__(self, opt, debug=False):
         self.opt = opt["INTERCEPT_DETECTION"]
         self.debug = debug
@@ -80,7 +78,7 @@ if __name__ == "__main__":
     import utils.utils_function as func
     opt = action.load_config_file("main_rc.json")
     im_pros = ImagePreprocessing.ImagePreprocessing(opt)
-    intercept = InterceptDetection(opt, debug=True)
+    intercept = IntersectionDetection(opt, debug=True)
     im = cv2.imread(test_im)
     im_cut = im[int(480 * 0.35):, :]
     height = int(im.shape[0] * float(opt['INTERCEPT_DETECTION']['crop_ratio']))

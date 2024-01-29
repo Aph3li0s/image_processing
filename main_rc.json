@@ -1,4 +1,8 @@
 {
+    "IMAGE_SHAPE": {
+        "width": 640,
+        "height": 480
+    },
     "LANE_PREPROCESSING": {
         "roi": {
             "left": 0.1,
@@ -27,6 +31,7 @@
             "longest_distance": 30
         },
         "anchor_step": -1,
+        "limit_sweep": -30, 
         "step": -3,
         "x_ratio": 0.8,
         "y_ratio": 0.2,
