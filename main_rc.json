@@ -1,7 +1,7 @@
 {
     "IMAGE_SHAPE": {
-        "width": 640,
-        "height": 480
+        "width": 240,
+        "height": 320
     },
     "LANE_PREPROCESSING": {
         "roi": {
@@ -45,7 +45,7 @@
             "crop_ratio": 0.35,
             "minimum_points": 1,
             "tolerance": 2,
-            "gap_thresh": 130,
-            "max_points_thresh": 240
+            "gap_thresh": 13,
+            "max_points_thresh": 120
     }
 }

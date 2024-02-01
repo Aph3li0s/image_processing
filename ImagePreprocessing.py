@@ -48,20 +48,19 @@ class ImagePreprocessing():
                                 np.ones((self.opt["dilate_kernel"], self.opt["dilate_kernel"]), np.uint8)) 
         
 
-        return new_sxbinary
+        return new_sxbinary, grayImg
         
     def region_of_interest(self, frame):
         height = frame.shape[0]
         width = frame.shape[1]
         mask = np.zeros_like(frame)
 
-        region_of_interest_vertices = np.array([[   (0, height),
-                                                    (width, height),
-                                                    (width, height - 60),
-                                                    (width - 200, 0.42 * height),
-                                                    (200, 0.42 * height),
-                                                    (0, height - 60),
-                                                    (0, height)]], np.int32)
+        region_of_interest_vertices = np.array([[   (0, height - 20),
+                                                    (width, height - 20),
+                                                    (width, height - 150),
+                                                    (width - 50, 0.5 * height),
+                                                    (50, 0.5 * height),
+                                                    (0, height - 150)]], np.int32)
         cv2.fillPoly(mask, region_of_interest_vertices, 255)
         masked_image = cv2.bitwise_and(frame, mask)
         return masked_image
@@ -83,10 +82,10 @@ class ImagePreprocessing():
         width = frame.shape[1]
         mask = np.zeros_like(frame)
 
-        region_of_interest_vertices = np.array([[   (50, height),
-                                                    (width - 50, height),
-                                                    (width - 50, 120),
-                                                    (50, 120)]], np.int32)
+        region_of_interest_vertices = np.array([[   (20, height),
+                                                    (width - 20, height),
+                                                    (width - 40, 120),
+                                                    (40, 120)]], np.int32)
         cv2.fillPoly(mask, region_of_interest_vertices, 255)
         masked_image = cv2.bitwise_and(frame, mask)
         return masked_image

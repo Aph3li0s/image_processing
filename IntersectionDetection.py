@@ -70,25 +70,29 @@ class IntersectionDetection:
         return [max_len, gap], None
     
 if __name__ == "__main__":
-    test_im = r'test_real/image120.jpg'
+    test_im = r'test_real/frame120.jpg'
     import os
+    import IntersectionDetection
     import ImagePreprocessing
     import cv2
     import utils.utils_action as action
     import utils.utils_function as func
     opt = action.load_config_file("main_rc.json")
-    im_pros = ImagePreprocessing.ImagePreprocessing(opt)
-    intercept = IntersectionDetection(opt, debug=True)
+    processing_image = ImagePreprocessing.ImagePreprocessing(opt)
+    check_thresh = opt['INTERCEPT_DETECTION']
+    crop_ratio = float(check_thresh['crop_ratio'])
+    height = opt["IMAGE_SHAPE"]["height"]
+    width = opt["IMAGE_SHAPE"]["width"]
+    crop_height_value =  int(height * crop_ratio)
+    intersection = IntersectionDetection.IntersectionDetection(opt, debug=True)
+    
     im = cv2.imread(test_im)
-    im_cut = im[int(480 * 0.35):, :]
-    height = int(im.shape[0] * float(opt['INTERCEPT_DETECTION']['crop_ratio']))
-    result= im_pros.process_image2(im_cut)
-    check_intercept, debug = intercept.detect(result)
-    # print('detected' if check_intercept[0][0] > 300 else 'not detected')
-    a = debug['max_points']
-    for i in a:
-        cv2.circle(im, (i[0], i[1] + height), 2, (0, 0, 255), -1)
-    print(check_intercept)
+    im_cut = im[crop_height_value:, :]
+    hlane_det = processing_image.process_image2(im_cut)
+    check_intersection = intersection.detect(hlane_det)
+    max_lines = check_intersection[1]['max_points']
+    for i in max_lines:
+        cv2.circle(im, (i[0], i[1] + crop_height_value), 1, (0, 0, 255), -1)
     # dis_lines = func.connect_lines_y_axis(a)
     cv2.imshow('test', im)
     cv2.waitKey(0)
