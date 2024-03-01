@@ -1,7 +1,7 @@
 {
     "IMAGE_SHAPE": {
-        "width": 240,
-        "height": 320
+        "width": 320,
+        "height": 240
     },
     "LANE_PREPROCESSING": {
         "roi": {
@@ -41,8 +41,8 @@
         "middle_point_ratio": 0.5,
         "angle_scale_ratio": 0.3
         },
-    "INTERCEPT_DETECTION": {
-            "crop_ratio": 0.35,
+    "INTERSECT_DETECTION": {
+            "crop_ratio": 0.5,
             "minimum_points": 1,
             "tolerance": 2,
             "gap_thresh": 13,

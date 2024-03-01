@@ -55,12 +55,12 @@ class ImagePreprocessing():
         width = frame.shape[1]
         mask = np.zeros_like(frame)
 
-        region_of_interest_vertices = np.array([[   (0, height - 20),
+        region_of_interest_vertices = np.array([[   (40, height),
+                                                    (width, height),
                                                     (width, height - 20),
-                                                    (width, height - 150),
-                                                    (width - 50, 0.5 * height),
-                                                    (50, 0.5 * height),
-                                                    (0, height - 150)]], np.int32)
+                                                    (width - 70, 0.4 * height),
+                                                    (100, 0.4 * height),
+                                                    (40, height - 20)]], np.int32)
         cv2.fillPoly(mask, region_of_interest_vertices, 255)
         masked_image = cv2.bitwise_and(frame, mask)
         return masked_image
@@ -74,7 +74,7 @@ class ImagePreprocessing():
         l_channel = hls[:,:,1]
         
         sobely = cv2.Sobel(l_channel, cv2.CV_64F, 0, 1, ksize = 3)
-        sybinary = self.region_of_interest2(self.get_sobel_image(sobely, [110, 250]))
+        sybinary =self.get_sobel_image(sobely, [110, 250])
         return sybinary
     
     def region_of_interest2(self, frame):

@@ -30,7 +30,7 @@ def extract_frames(video_path, output_folder):
     cap.release()
 
 if __name__ == "__main__":
-    video_path = "vid.avi"  # Change this to your video file path
+    video_path = "captures/capture.avi"  # Change this to your video file path
     output_folder = "run_real"  # Change this to the folder where you want to save frames
 
     extract_frames(video_path, output_folder)

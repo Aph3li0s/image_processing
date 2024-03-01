@@ -17,13 +17,23 @@ def clear_folder(in_folder):
 def display_points(points, image):
     if points is not None:
         for point in points:
-            image = cv2.circle(image, point, 1, (0, 0, 255), -1)    #red
+            image = cv2.circle(image, point, 1, (0, 255, 0), -1)    #red
     return image
-
+def display_points2(points, image, color):
+    if color == 0:
+        if points is not None:
+            for point in points:
+                image = cv2.circle(image, point, 1, (255, 0, 0), -1)    #red
+        return image
+    if color == 1:
+        if points is not None:
+            for point in points:
+                image = cv2.circle(image, point, 1, (0, 0, 255), -1)    #red
+        return image
 def process_image(in_img, intersection_img, lane_keep_img, show):
     opt = action.load_config_file("main_rc.json")
     ImageProcessor = ImagePreprocessing.ImagePreprocessing(opt)
-    check_thresh = opt['INTERCEPT_DETECTION']
+    check_thresh = opt['INTERSECT_DETECTION']
     crop_ratio = float(check_thresh['crop_ratio'])
     height = opt["IMAGE_SHAPE"]["height"]
     width = opt["IMAGE_SHAPE"]["width"]
@@ -36,8 +46,8 @@ def process_image(in_img, intersection_img, lane_keep_img, show):
             if key == ord('e'):
                 break
             image_path = os.path.join(in_img, path)
-            im = cv2.resize(cv2.imread(image_path), (width, height))   
-            
+            # im = cv2.resize(cv2.imread(image_path), (height, width))   
+            im = cv2.imread(image_path)
             lane_det, grayIm = ImageProcessor.process_image(im)
             im_cut = im[crop_height_value:, :]
             hlane_det = ImageProcessor.process_image2(im_cut)
@@ -61,7 +71,8 @@ def process_image(in_img, intersection_img, lane_keep_img, show):
             if key == ord('e'):
                 break
             image_path = os.path.join(in_img, path)
-            im = cv2.resize(cv2.imread(image_path), (width, height))    
+            
+            im = cv2.resize(cv2.imread(image_path), (height, width))    
             lane_det, grayIm = ImageProcessor.process_image(im)            
             
             left_points, right_points, _, _ = LaneLine.find_left_right_lane(lane_det)
@@ -73,11 +84,12 @@ def process_image(in_img, intersection_img, lane_keep_img, show):
             middle_point = lane_data["middle_point"] 
 
             new_im = np.copy(im)
-                
-            if left_point == [0, 0]:
-                cv2.putText(new_im, 'max right', (0, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
-            elif right_point == [0, 0]:
-                cv2.putText(new_im, 'max left', (0, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+            new_im = display_points2(left_points, im, 0)
+            new_im = display_points2(right_points, im, 1)
+            if  len(left_points) == 0:
+                cv2.putText(new_im, 'curve left', (0, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+            elif  len(right_points) == 0:
+                cv2.putText(new_im, 'curve right', (0, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
             else:
                 new_im = cv2.line(new_im, left_point, right_point, 255, 2)
                 new_im = cv2.line(new_im, (width//2, height), middle_point, 255, 2)
@@ -87,11 +99,9 @@ def process_image(in_img, intersection_img, lane_keep_img, show):
                 cv2.imshow('lane keeping', new_im)
                 
 def process_video(in_vid, show = True):
-    import logging
-    logging.basicConfig(level=logging.INFO) 
-    fps_limit = 15 #15
+    fps_limit = 30 #15
     opt = action.load_config_file("main_rc.json")
-    check_thresh = opt['INTERCEPT_DETECTION']
+    check_thresh = opt['INTERSECT_DETECTION']
     crop_ratio = float(check_thresh['crop_ratio'])
     height = opt["IMAGE_SHAPE"]["height"]
     width = opt["IMAGE_SHAPE"]["width"]
@@ -103,8 +113,6 @@ def process_video(in_vid, show = True):
     LaneLine = LaneDetection.LaneDetection(opt)
     LaneKeeper = LaneKeeping.LaneKeeping(opt, True)
     cnt_timer_intersect = 0
-    cnt_timer_intersect_check = 0
-    cnt_timer_curve = 0
     cnt_curve = 0
     cnt_intersect = 0
     intersect_timer = 0
@@ -144,14 +152,17 @@ def process_video(in_vid, show = True):
         frame_new = np.copy(frame_resize)
         cv2.putText(speed_frame, f'Speed: {round(speed, 3)}', (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
         cv2.putText(speed_frame, f'Angle: {round(angle, 3)}', (20, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-        if left_point == [0, 0]:
-            # cv2.putText(frame_new, 'max right', (0, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+        print(left_point, " ", right_point)
+        if left_point[0] <= 10:
+            cv2.putText(frame_new, 'max left', (0, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+            
             max_curve = True
-            pass
-        elif right_point == [0, 0]:
-            # cv2.putText(frame_new, 'max left', (0, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+            curve_right = True
+
+        elif right_point[0] >= 235:
+            cv2.putText(frame_new, 'max right', (0, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
             max_curve = True
-            pass
+            curve_left = True
         else:
             frame_new = cv2.line(frame_new, left_point, right_point, 255, 2)
             frame_new = cv2.line(frame_new, (width//2, height), middle_point, 255, 2)
@@ -163,6 +174,8 @@ def process_video(in_vid, show = True):
                 cv2.putText(blank_frame, "On lane", (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
             if max_curve == True:
                 cv2.putText(blank_frame, "Max curve", (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)  
+            blank_frame = cv2.line(blank_frame, left_point, right_point, 255, 2)
+            blank_frame = cv2.line(blank_frame, (width//2, height), middle_point, 255, 2)
         # Intersection case 
         if intersect_check == True:
             cnt_intersect += 1
@@ -173,6 +186,7 @@ def process_video(in_vid, show = True):
                 cnt_timer_intersect += 1
                 if cnt_timer_intersect == 1:
                     cv2.imwrite('inter.jpg', frame)
+                    cv2.imshow('start blind curve frame', cv2.resize(frame, (320, 240)))
                     # print('saved inter')
                     blind_curve = True
         # Blind curve case
@@ -186,6 +200,7 @@ def process_video(in_vid, show = True):
                     # print(time.time() - curve_timer)
                 else:
                     cv2.imwrite('done_curve.jpg', frame)
+                    # cv2.imshow('done blind curve', cv2.resize(frame, (320, 240)))
                     # print('saved curve')
                     max_curve = False
                     blind_curve = False
@@ -220,5 +235,5 @@ def process_video(in_vid, show = True):
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    # process_image(in_img=r'run_real', intersection_img = r'intersection_img', lane_keep_img=None, show = None)
+    # process_image(in_img=r'run_real', intersection_img = None, lane_keep_img=r'lane_keeping_img', show = True)
     process_video(in_vid=r'vid.avi')

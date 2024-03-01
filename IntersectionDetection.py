@@ -4,7 +4,7 @@ from collections import defaultdict
 
 class IntersectionDetection:
     def __init__(self, opt, debug=False):
-        self.opt = opt["INTERCEPT_DETECTION"]
+        self.opt = opt["INTERSECT_DETECTION"]
         self.debug = debug
 
 
